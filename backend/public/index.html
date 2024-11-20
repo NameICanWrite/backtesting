@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backtesting Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #backtestForm {
+            margin-bottom: 20px;
+        }
+        #result table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #result table, #result th, #result td {
+            border: 1px solid #ddd;
+        }
+        #result th, #result td {
+            padding: 8px;
+            text-align: left;
+        }
+        #result th {
+            background-color: #f2f2f2;
+        }
+        #inputFile {
+            margin-bottom: 10px;
+            width: 500px;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Simple Backtesting Tool</h1>
+    <form id="backtestForm">
+        <label for="inputFile">Upload <code>.csv</code> file from TradingView backtesting:</label>
+        <input type="file" id="inputFile" name="input" accept=".csv" required>
+        <br>
+        <p>
+            How it works: loads a csv of trades and finds the most trustworthy prices for the same time. Source of prices is <a href="https://www.dukascopy.com/swiss/english/marketwatch/historical/">Dukascopy</a>. Range is currently limited to XAUUSD 1 nov 2023 - 17 nov 2024. Can be extended on demand
+        </p>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+    <div id="result">
+        <!-- Results will be displayed here -->
+    </div>
+    <script>
+        document.getElementById('backtestForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const inputFile = document.getElementById('inputFile').files[0];
+            if (!inputFile) {
+                alert('Please select a file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('input', inputFile);
+            formData.append('ticker', 'XAUUSD');
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const lastTrade = data.trades[data.trades.length-1]
+                const profitPercent = data.profit/(lastTrade.exit.price * (lastTrade.contracts || 1)) * 100
+                // Display the result
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                <h2>Total Profit: ${data.profit.toFixed(2)} (${profitPercent.toFixed(1)}%)</h2>
+                <h2>Total Trades: ${data.trades.length}</h2>
+                <h2>Period: ${data.trades[0].entry.date} - ${data.trades[data.trades.length-1].exit.date}</h2>
+                `;
+                
+                // Display trades
+                if (data.trades && data.trades.length > 0) {
+                    let tradesHtml = `
+                        <h3>Trades:</h3>
+                        <table>
+                            <tr>
+                                <th>Trade #</th>
+                                <th>Direction</th>
+                                <th>Entry Signal</th>
+                                <th>Entry Date</th>
+                                <th>Entry Price</th>
+                                <th>Exit Signal</th>
+                                <th>Exit Date</th>
+                                <th>Exit Price</th>
+                                <th>Profit</th>
+                                <th>Profit %</th>
+                            </tr>`;
+
+                    data.trades.forEach(trade => {
+                        tradesHtml += `
+                            <tr>
+                                <td>${trade.tradeNumber}</td>
+                                <td>${trade.direction}</td>
+                                <td>${trade.entry.signal}</td>
+                                <td>${trade.entry.date}</td>
+                                <td>${trade.entry.price.toFixed(2)}</td>
+                                <td>${trade.exit.signal}</td>
+                                <td>${trade.exit.date}</td>
+                                <td>${trade.exit.price.toFixed(2)}</td>
+                                <td>${trade.profit.toFixed(2)}</td>
+                                <td>${(trade.profitPercent * 100).toFixed(2)}%</td>
+                            </tr>`;
+                    });
+                    tradesHtml += '</table>';
+                    resultDiv.innerHTML += tradesHtml;
+                } else {
+                    resultDiv.innerHTML += '<p>No trades found.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while processing the file.');
+            });
+        });
+    </script>
+</body>
+</html>

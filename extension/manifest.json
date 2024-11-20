@@ -1,0 +1,37 @@
+{
+    "manifest_version": 3,
+    "name": "TradingView Data Extractor",
+    "version": "1.2",
+    "description": "Extracts data from downloaded files and sends requests to a server for TradingView.",
+    "permissions": [
+      "downloads",
+      "storage",
+      "activeTab",
+      "scripting"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup.html"
+    },
+    "host_permissions": [
+      "*://*.tradingview.com/*"
+    ],
+    "content_scripts": [
+      {
+        "matches": ["*://*.tradingview.com/*"],
+        "js": ["content.js"],
+        "run_at": "document_end"
+      }
+    ],
+    "commands": {
+      "send_data": {
+        "suggested_key": {
+          "default": "Alt+B"
+        },
+        "description": "Send data to server"
+      }
+    }
+  }
+  
