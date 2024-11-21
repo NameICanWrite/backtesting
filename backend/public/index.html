@@ -67,11 +67,12 @@
             .then(data => {
                 const lastTrade = data.trades[data.trades.length-1]
                 const profitPercent = data.profit/(lastTrade.exit.price * (lastTrade.contracts || 1)) * 100
+                const percentWinning = data.trades.filter(trade => trade.profit > 0).length / data.trades.length * 100
                 // Display the result
                 const resultDiv = document.getElementById('result');
                 resultDiv.innerHTML = `
                 <h2>Total Profit: ${data.profit.toFixed(2)} (${profitPercent.toFixed(1)}%)</h2>
-                <h2>Total Trades: ${data.trades.length}</h2>
+                <h2>Total Trades: ${data.trades.length} (${percentWinning.toFixed(1)}% winning)</h2>
                 <h2>Period: ${data.trades[0].entry.date} - ${data.trades[data.trades.length-1].exit.date}</h2>
                 `;
                 
