@@ -169,6 +169,8 @@ function correctTrade(trade: Trade, priceData: { [key: string]: { open: number }
   if (!entry || !exit || !entry.date || !exit.date) return null
   const entryDateGMT = new Date(entry.date)
   const exitDateGMT = new Date(exit.date)
+  entryDateGMT.setSeconds(0, 0)
+  exitDateGMT.setSeconds(0, 0)
 
   const entryDateUTC = new Date(entryDateGMT.getTime() - 3 * 60 * 60 * 1000)
   const exitDateUTC = new Date(exitDateGMT.getTime() - 3 * 60 * 60 * 1000)
